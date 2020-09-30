@@ -70,11 +70,62 @@ precip_df =
   bind_rows(precip_2018, precip_2017) %>%  view
 
 precip_df =
-	left_join(precip_df, month_df, by = "month") %>% view
+	left_join(precip_df, month_df, by = "month") 
 
 ```
 
 This dataset contains information from the Mr. Trashwheel trash collector in Baltimore, Maryland. As trash enters the inner harbor, the trashwheel collects that trash and stores it in a dumpster. The dataset contains information on year, month, and trash collected, including some specific kinds of trash. There are a total of `r nrow(trashwheel_df)` rows in our final dataset. Additional data sheets include month precipitation data. The total precipitation in 2018 was `r precip_df %>% filter(year == 2018) %>% pull(total) %>% sum()` inches and the median number of sports balls found in a dumpster in 2017 was `r trashwheel_df %>% filter(year == 2017) %>% pull(sports_balls) %>% median()`.
+
+
+## Problem 2 
+
+```{r reading in dataset and doing some basic cleaning}
+subway_df = read_csv("./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") 
+  subway_df = janitor::clean_names(subway_df) %>%  
+  select(line, station_name, station_latitude, station_longitude, route1, route2, route3, route4, route5, route6, route7, route8, route9, route10, route11, entrance_type, entry, vending, ada) %>% 
+    mutate(entry = recode(entry, YES = "TRUE", NO = "FALSE")) %>% 
+    mutate(entry = as.logical(entry))
+ 
+  
+```
+
+
+```{r reformatting df to separate route number and route type}
+clean_subway_df = subway_df %>% 
+  mutate(route8 = as.character(route8),
+         route9 = as.character(route9),
+         route10 = as.character(route10),
+         route11 = as.character(route11)
+         ) %>% 
+  pivot_longer(
+    route1:route11,
+    names_to = "route_no",
+    values_to = "route_name",
+    names_prefix = "route"
+    ) 
+
+view(clean_subway_df)
+
+clean_subway_df %>% 
+  filter(ada == TRUE) %>% 
+  distinct(station_name, line)
+
+```
+
+```{r}
+distinct(clean_subway_df, station_name, line)
+```
+
+
+This dataset provides data on transit 
+
+There are a total of 455 distinct subway stations in NYC. Of those, 84 distinct stations are ADA compliant. 
+
+```{r}
+clean_subway_df %>% 
+  filter(entry == "TRUE",
+         vending == "NO")
+```
 
 
 
