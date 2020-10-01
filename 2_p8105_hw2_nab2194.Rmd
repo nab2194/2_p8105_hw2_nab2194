@@ -74,7 +74,6 @@ precip_df =
 
 This dataset contains information from the Mr. Trashwheel trash collector in Baltimore, Maryland. As trash enters the inner harbor, the trashwheel collects that trash and stores it in a dumpster. The dataset contains information on year, month, and trash collected, including some specific kinds of trash. There are a total of `r nrow(trashwheel_df)` rows in our final dataset. Additional data sheets include month precipitation data. The total precipitation in 2018 was `r precip_df %>% filter(year == 2018) %>% pull(total) %>% sum()` inches and the median number of sports balls found in a dumpster in 2017 was `r trashwheel_df %>% filter(year == 2017) %>% pull(sports_balls) %>% median()`.
 
-
 ## Problem 2 
 
 ```{r reading in dataset and doing some basic cleaning}
@@ -86,7 +85,6 @@ subway_df = read_csv("./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
 ```
 
 This dataset provides data on subway entrances/exits in New York City, including ADA compliance, entrance type, vending, and routes served at the station. The original dataset had `r nrow(subway_df)` rows and `r ncol(subway_df)` columns after I removed the variables I didn't want for this analysis. In order to clean this data, I reformatted the data to create two distinct variables for route number and route name, which were previously represented across multiple columns. I also cleaned up variable names to remove upper-case in titles. The dataset is relatively cleaner than when I started the data wrangling process, since every value has a cell, the variables are in columns, and the observations are in rows.Some more work could be done to improve the tidyness of the "Station Name" and "Line" variables, which include in some cases Street or Avenue, as well as a mix of numbers and letters. 
-
 
 
 ```{r proportion of station entrances w/o vending that allow entrance}
@@ -177,7 +175,7 @@ snp_df =
 
 clean_snp_df = snp_df %>% 
   separate(date, into =
-            c("month","day","year")) %>% 
+           c("month","day","year")) %>% 
   mutate(month = as.numeric(month)) 
  
 helper_snp_df = 
@@ -243,5 +241,5 @@ I had to tidy these datasets in order to be able to join them:
 
 - For the unemployment data, first I made the table longer to ensure that the months were values in the same column rather than being spread over multiple columns. I recoded months to ensure the values were consistent with my other two dataframes, since this is important for joining. 
 
-After joining the three datasets, I was left with a dataset with `r nrow(final_pols_month)` rows and `r ncol(final_pols_month)` columns. It contains information about political affiliation of politicians (including senators, governors, and presidents), the state of the stock market, and the unemployment rate from `r min(pull(final_pols_month))` to `r max(pull(final_pols_month))` and is also disaggregated by month. 
+After joining the three datasets, I was left with a dataset with `r nrow(final_pols_month)` rows and `r ncol(final_pols_month)` columns. It contains information about political affiliation of politicians (including senators, governors, and presidents), the state of the stock market, and the unemployment rate from `r min(pull(final_pols_month))` to `r max(pull(final_pols_month))`. This dataset also includes disaggregated by month. 
 
