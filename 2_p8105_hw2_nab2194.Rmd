@@ -83,7 +83,6 @@ subway_df = read_csv("./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
   select(line:entry, vending, ada) %>% 
     mutate(entry = recode(entry, YES = "TRUE", NO = "FALSE")) %>% 
     mutate(entry = as.logical(entry))
-  
 ```
 
 This dataset provides data on subway entrances/exits in New York City, including ADA compliance, entrance type, vending, and routes served at the station. The original dataset had `r nrow(subway_df)` rows and `r ncol(subway_df)` columns after I removed the variables I didn't want for this analysis. In order to clean this data, I reformatted the data to create two distinct variables for route number and route name, which were previously represented across multiple columns. I also cleaned up variable names to remove upper-case in titles. The dataset is relatively cleaner than when I started the data wrangling process, since every value has a cell, the variables are in columns, and the observations are in rows.Some more work could be done to improve the tidyness of the "Station Name" and "Line" variables, which include in some cases Street or Avenue, as well as a mix of numbers and letters. 
@@ -213,7 +212,6 @@ clean_unemploy = unemploy %>%
 ##created an intermediate df to join
 interm_unemploy = clean_unemploy %>% 
 mutate(year = as.character(year)) 
-
 ```
 
 ```{r joining my datasets}
@@ -245,5 +243,5 @@ I had to tidy these datasets in order to be able to join them:
 
 - For the unemployment data, first I made the table longer to ensure that the months were values in the same column rather than being spread over multiple columns. I recoded months to ensure the values were consistent with my other two dataframes, since this is important for joining. 
 
-After joining the three datasets, I was left with a dataset with `r nrow(final_pols_month)` rows and `r ncol(final_pols_month)` columns. It contains information about political affiliation of politicians (including senators, governors, and presidents), the state of the stock market, and the unemployment rate from `r min(pull(final_pols_month))` to `r max(pull(final_pols_month))` and is also disaggregated by month. The average unemployment rate across all years from 1947 to 2015 (excluding missing values) was `r mean(final_pols_month, perc_unemploy, na.rm = TRUE) `
+After joining the three datasets, I was left with a dataset with `r nrow(final_pols_month)` rows and `r ncol(final_pols_month)` columns. It contains information about political affiliation of politicians (including senators, governors, and presidents), the state of the stock market, and the unemployment rate from `r min(pull(final_pols_month))` to `r max(pull(final_pols_month))` and is also disaggregated by month. 
 
