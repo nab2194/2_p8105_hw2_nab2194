@@ -1,6 +1,6 @@
 ---
 title: "Homework 2"
-author: Natalie Boychuk 
+author: Natalie Boychuk (nab2194)
 date: September 27 2020 
 output: github_document
 ---
@@ -8,6 +8,7 @@ output: github_document
 ```{r}
 library(tidyverse)
 library(readxl)
+options(digits = 2)
 ```
 
 
@@ -37,24 +38,21 @@ precip_2018 =
   read_excel(
     "./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
     sheet = "2018 Precipitation",
-    skip = 1
-  ) %>% 
-  janitor::clean_names() %>% 
-  drop_na(month) %>% 
-  mutate(year = 2018) %>% 
-  relocate(year) 
+    skip = 1) %>% 
+        janitor::clean_names() %>% 
+        drop_na(month) %>% 
+        mutate(year = 2018) %>% 
+        relocate(year) 
 
 precip_2017 = 
   read_excel(
     "./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
     sheet = "2018 Precipitation",
-    skip = 1
-  ) %>% 
-  janitor::clean_names() %>% 
-  drop_na(month) %>% 
-  mutate(year = 2017) %>% 
-  relocate(year) 
-
+    skip = 1) %>% 
+        janitor::clean_names() %>% 
+        drop_na(month) %>% 
+        mutate(year = 2017) %>% 
+        relocate(year) 
 ```
 
 Combine annual precipitation 
@@ -82,13 +80,38 @@ This dataset contains information from the Mr. Trashwheel trash collector in Bal
 ```{r reading in dataset and doing some basic cleaning}
 subway_df = read_csv("./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") 
   subway_df = janitor::clean_names(subway_df) %>%  
-  select(line, station_name, station_latitude, station_longitude, route1, route2, route3, route4, route5, route6, route7, route8, route9, route10, route11, entrance_type, entry, vending, ada) %>% 
+  select(line:entry, vending, ada) %>% 
     mutate(entry = recode(entry, YES = "TRUE", NO = "FALSE")) %>% 
     mutate(entry = as.logical(entry))
- 
   
 ```
 
+This dataset provides data on subway entrances/exits in New York City, including ADA compliance, entrance type, vending, and routes served at the station. The original dataset had `r nrow(subway_df)` rows and `r ncol(subway_df)` columns after I removed the variables I didn't want for this analysis. In order to clean this data, I reformatted the data to create two distinct variables for route number and route name, which were previously represented across multiple columns. I also cleaned up variable names to remove upper-case in titles. The dataset is relatively cleaner than when I started the data wrangling process, since every value has a cell, the variables are in columns, and the observations are in rows.Some more work could be done to improve the tidyness of the "Station Name" and "Line" variables, which include in some cases Street or Avenue, as well as a mix of numbers and letters. 
+
+
+
+```{r proportion of station entrances w/o vending that allow entrance}
+subway_df %>% 
+  filter(entry == "TRUE",
+         vending == "NO") %>% 
+  nrow
+  
+subway_df %>% 
+  filter(vending == "NO") %>% 
+  nrow
+
+69/183 
+```
+
+```{r getting the number of ADA compliant stations }
+subway_df %>% 
+  filter(ada == TRUE) %>% 
+  distinct(station_name, line)
+```
+
+```{r getting the number of distinct stations}
+distinct(subway_df, station_name, line)
+```
 
 ```{r reformatting df to separate route number and route type}
 clean_subway_df = subway_df %>% 
@@ -103,31 +126,124 @@ clean_subway_df = subway_df %>%
     values_to = "route_name",
     names_prefix = "route"
     ) 
+```
 
-view(clean_subway_df)
-
+```{r ADA compliant stations that serve A train}
 clean_subway_df %>% 
-  filter(ada == TRUE) %>% 
+  filter(route_name == "A") %>% 
   distinct(station_name, line)
 
+clean_subway_df %>%
+  filter(route_name == "A",
+         ada == "TRUE") %>% 
+  distinct(station_name, line) %>% 
+  count(station_name, line) 
 ```
 
-```{r}
-distinct(clean_subway_df, station_name, line)
+- There are a total of 465 distinct subway stations in NYC. Of those, 84 distinct stations are ADA compliant. 
+- There are 69 station entrance/exits that allow entrance and do not have vending out of 183 total stations that do not have vending (`r (69/183)*100` of entrances without vending).
+- 60 distinct stations serve the A train; of those, 17 distinct stations are ADA compliant. 
+
+## Problem 3 
+
+```{r reading in pols_month}
+pols_month = read_csv("./data/fivethirtyeight_datasets/pols-month.csv") 
+
+clean_pols_month = pols_month %>% 
+  separate(mon, into = c("year","month","day")) %>% 
+  mutate(month = as.numeric(month))  
+  
+helper_pols_df = 
+  tibble(
+    month = 1:12,
+    month_name = month.name) %>% 
+    mutate(month = as.numeric(month)) 
+    
+joined_pols_month = left_join(clean_pols_month, helper_pols_df, by = "month") 
+
+##created an intermediate df to join
+interm_pols_month = joined_pols_month %>% 
+  mutate(president = case_when(
+    prez_gop == 1 ~ "gop",
+    prez_dem == 1 ~ "dem")) %>% 
+    select(-prez_gop, -prez_dem, -month, -day) %>% 
+    relocate(month_name, .after = year) 
+
+``` 
+
+
+```{r reading in/cleaning snp.csv}
+snp_df = 
+  read_csv("./data/fivethirtyeight_datasets/snp.csv")
+
+clean_snp_df = snp_df %>% 
+  separate(date, into =
+            c("month","day","year")) %>% 
+  mutate(month = as.numeric(month)) 
+ 
+helper_snp_df = 
+  tibble(
+    month = 1:12,
+    month_name = month.name) %>% 
+    mutate(month = as.numeric(month))
+
+##created an intermediate df to join
+joined_snp_df = left_join(clean_snp_df, helper_snp_df, by = "month") %>% 
+  relocate(month_name, .after = year)
+
+interm_snp_df = joined_snp_df %>% 
+   select(-month, -day) 
+
 ```
 
+```{r read in and tidy unemployment data }
+unemploy = 
+  read_csv("./data/fivethirtyeight_datasets/unemployment.csv") %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    jan:dec, 
+    names_to = "month",
+    values_to = "perc_unemploy"
+  ) 
 
-This dataset provides data on transit 
+clean_unemploy = unemploy %>% 
+   mutate(month = recode(month, jan = "January", feb = "February", mar = "March", apr = "April", may = "May", jun = "June", jul = "July", aug = "August", sep = "September", oct = "October", nov = "November", dec = "Decmber")) %>% 
+  rename(month_name = month) 
 
-There are a total of 455 distinct subway stations in NYC. Of those, 84 distinct stations are ADA compliant. 
+##created an intermediate df to join
+interm_unemploy = clean_unemploy %>% 
+mutate(year = as.character(year)) 
 
-```{r}
-clean_subway_df %>% 
-  filter(entry == "TRUE",
-         vending == "NO")
 ```
 
+```{r joining my datasets}
+join_interm_df =
+  left_join(interm_pols_month, interm_snp_df) 
 
+final_pols_month =  
+  left_join(join_interm_df, interm_unemploy)
 
+view(final_pols_month) 
+ 
+```
 
+```{r include=FALSE}
+final_pols_month %>% 
+  pull(as.numeric(year))
+
+final_pols_month %>% 
+  pull(perc_unemploy)
+``` 
+
+This dataset combines information from 3 separate datasets, which have been joined together. The first dataset, pols_month, had `r nrow(pols_month)` observations and `r ncol(pols_month)` variables related to the political affiliation of governors, senators, and presidents. This was joined with the snp dataset, which originally contained `r nrow(snp_df)` observations and `r ncol(snp_df)` variables related to the Standard & Poor's stock market index. These two datasets were joined with the unemploy dataset, which contained 68 observations and 13 variables related to the percentage of the population unemployed at a given time. 
+
+I had to tidy these datasets in order to be able to join them:
+
+- For the pols_month dataset, I first separated out the date variable to render three separate variables: month, date, and year. I created a "helper tibble" (helper_pols_df) to create a month variable using the month name, which I then joined to my pols_month dataset. Because joins require consistent variable types I had to convert the month variable in pols_month using the as.numeric function to make sure that it was consistent. Then, I created a new variable for "president" using conditional arguments and deleted variables I didn't need. 
+
+- For the snp dataset, I followed almost the same process as above. After joining my month variable to my dataset, I removed variables I didn't want and arranged the table so that year/month columns were listed first. 
+
+- For the unemployment data, first I made the table longer to ensure that the months were values in the same column rather than being spread over multiple columns. I recoded months to ensure the values were consistent with my other two dataframes, since this is important for joining. 
+
+After joining the three datasets, I was left with a dataset with `r nrow(final_pols_month)` rows and `r ncol(final_pols_month)` columns. It contains information about political affiliation of politicians (including senators, governors, and presidents), the state of the stock market, and the unemployment rate from `r min(pull(final_pols_month))` to `r max(pull(final_pols_month))` and is also disaggregated by month. The average unemployment rate across all years from 1947 to 2015 (excluding missing values) was `r mean(final_pols_month, perc_unemploy, na.rm = TRUE) `
 
